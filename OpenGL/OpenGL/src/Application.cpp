@@ -38,20 +38,57 @@ int main(void)
     while (!glfwWindowShouldClose(window))
     {
         //clearing the screen
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //Immediate mode 
-
-        glBegin(GL_TRIANGLES);
+        /*--Immediate mode--*/
+#if 0
+       glBegin(GL_TRIANGLES);
             glColor3f(1, 0, 0);
-            glVertex2f(-0.5f, -0.5f);
+            glVertex2f(-0.5f, -0.5f);  
 
             glColor3f(0, 1, 0);
             glVertex2f(0, 0.5f);
 
             glColor3f(0, 0, 1);
             glVertex2f(0.5f, -0.5f);
+        glEnd(); 
+#endif
+
+#if 0
+        //without depth
+        glBegin(GL_TRIANGLES); 
+        glColor3f(1, 0, 0); //red
+            glVertex2f(-0.5f, -0.5);
+            glVertex2f(0, 0.5f);
+            glVertex2f(0.5f, -0.5f);
         glEnd();
+
+        glBegin(GL_TRIANGLES);
+        glColor3f(0, 1, 0); //green
+            glVertex2f(-0.5f, 0.5f);
+            glVertex2f(0, -0.5f);
+            glVertex2f(0.5f, 0.5f);
+        glEnd();
+#endif
+
+#if 1
+        //with depth
+        glEnable(GL_DEPTH_TEST);
+ 
+        glBegin(GL_TRIANGLES);
+            glColor3f(1, 0, 0); //red
+            glVertex3f(-0.5f, -0.5,0.1f);  
+            glVertex3f(0, 0.5f,0.1f);
+            glVertex3f(0.5f, -0.5f,0.1f);
+        glEnd();
+
+        glBegin(GL_TRIANGLES);
+            glColor3f(0, 1, 0); //green
+            glVertex3f(-0.5f, 0.5f,0.2f);  
+            glVertex3f(0, -0.5f,0.2f);
+            glVertex3f(0.5f, 0.5f,0.2f);
+        glEnd();
+#endif
 
         /*When an application draws in a single buffer the resulting image may display flickering issues.*/
         /*Double buffering : The front buffer contains the final output image that is shown at the screen, 
