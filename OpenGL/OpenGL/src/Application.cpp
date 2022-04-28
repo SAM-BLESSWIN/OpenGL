@@ -21,7 +21,8 @@ int main(void)
 
 
     //setting opengl rendering profile
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE); //compat profile
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  //core profile
 
     //creating a window
     GLFWwindow* window = glfwCreateWindow(800, 600, "GPU Rendering", NULL, NULL);
@@ -47,12 +48,40 @@ int main(void)
     /*Current OpenGL version*/
     std::cout << glGetString(GL_VERSION) << std::endl;
 
+    //vertex doesn't contain only position 
+    //it also include various attributes such as position,texture co-ord,colors,normals,etc...
+    float vertices[6] =
+    {
+        -0.5f,-0.5f,
+         0.0f, 0.5f,
+         0.5f,-0.5f
+    };
+
+    /*Vertex Buffer Data*/
+    unsigned int VBO;
+    glGenBuffers(1, &VBO); //bufferid contains the id of that buffer
+    //opengl keeps using the binded id untill someother id is binded or this is unbinded
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); //selecting that id and setting to interpret as a array 
+    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), vertices,GL_STATIC_DRAW); //allocating and initializing data
+
+    glEnableVertexAttribArray(0); //enabling vertex atribute by passing its starting index
+    
+    /*Vertex Attributes*/
+    //index - starting index of the vertex
+    //size - count of data in each vertex
+    //type - datatype of the attribute
+    //normalize? - whether we want gpu to normalize data or not 
+    //stride - amount of bytes between each vertex 
+    //pointer - offset of each attribute in bytes
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),(const void*)0); //posititon attribute
+
+
     //keep window open untill closed
     while (!glfwWindowShouldClose(window))
     {
         //clearing the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+         
         /*--Immediate mode--*/
         //DrawImmediate();
 
