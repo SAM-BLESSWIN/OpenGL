@@ -2,8 +2,69 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-
 void DrawImmediate();
+
+static unsigned int CompileShader(unsigned int type, const std::string& source)
+{
+    unsigned int id = glCreateShader(type);
+    const char* src = source.c_str(); //(char* src = &source[0]) address of 1st char in string
+
+    //id - shader id
+    //count - number of source code passing
+    //address of the array(char*) holding pointers to all source code
+    //array containing length of each string
+    glShaderSource(id, 1, &src, nullptr);
+
+    glCompileShader(id);
+
+    /*Debugging Error*/
+    int result;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+
+    if (result == GL_FALSE) //GL_FALSE =0 
+    {
+        int length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        
+       // std::unique_ptr<char[]> message = std::make_unique<char[]>(length * sizeof(char));  //dynamic allocation in heap
+        char* message = (char*)alloca(length * sizeof(char)); //dynamic allocation in stack
+        glGetShaderInfoLog(id, length, &length, message);
+
+        std::cout << "Failed to compile " 
+            <<(type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") << " shader!!!"<<std::endl;
+        std::cout << message << std::endl;
+
+        glDeleteShader(id);
+        return 0;
+    }
+    return id;
+}
+
+
+static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
+{
+    unsigned int programId = glCreateProgram(); //return an id
+
+    /*Compiling Shader*/
+    unsigned int vs = CompileShader(GL_VERTEX_SHADER,vertexShader);
+    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
+
+    /*Attach both shader together to same program*/
+    glAttachShader(programId,vs);
+    glAttachShader(programId,fs);
+
+    /*Links the shaders attached to program*/
+    glLinkProgram(programId);
+
+    /*Validate the program*/
+    glValidateProgram(programId);
+
+    /*Deleting the shader code because it is attached to program and validated*/
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    return programId;
+}
 
 int main(void)
 {
@@ -13,17 +74,6 @@ int main(void)
 
     /*State setting function of GLFW has GLFW_ prefix*/
     
-    // OpenGL version 3.3 
-    //setting state context version to 3 and above
-    //This ensures that when a user does not have the proper OpenGL version GLFW fails to run. 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
-
-    //setting opengl rendering profile
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE); //compat profile
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  //core profile
-
     //creating a window
     GLFWwindow* window = glfwCreateWindow(800, 600, "GPU Rendering", NULL, NULL);
 
@@ -57,17 +107,17 @@ int main(void)
          0.5f,-0.5f
     };
 
-    /*Vertex Buffer Data*/
+    /*Vertex Buffer Object*/
     unsigned int VBO;
     glGenBuffers(1, &VBO); //bufferid contains the id of that buffer
     //opengl keeps using the binded id untill someother id is binded or this is unbinded
     glBindBuffer(GL_ARRAY_BUFFER, VBO); //selecting that id and setting to interpret as a array 
     glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), vertices,GL_STATIC_DRAW); //allocating and initializing data
 
-    glEnableVertexAttribArray(0); //enabling vertex atribute by passing its starting index
+    glEnableVertexAttribArray(0); //enabling vertex atribute by passing its index
     
     /*Vertex Attributes*/
-    //index - starting index of the vertex
+    //index - index of the attribute
     //size - count of data in each vertex
     //type - datatype of the attribute
     //normalize? - whether we want gpu to normalize data or not 
@@ -75,6 +125,27 @@ int main(void)
     //pointer - offset of each attribute in bytes
     glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),(const void*)0); //posititon attribute
 
+    /*Shader Code*/
+    std::string vertexShader =
+        "#version 330 core\n"     //use opengl version 330
+        "\n"
+        "layout(location = 0) in vec4 position;\n"  //location=0 is the index of the attribute
+        "void main()\n"
+        "{\n"
+        " gl_Position = position;\n"
+        "}\n";
+
+    std::string fragmentShader=
+        "#version 330 core\n"     //use opengl version 330
+        "\n"
+        "layout(location = 0) out vec4 color;\n"  //location=0 is the index of the attribute
+        "void main()\n"
+        "{\n"
+        " color=vec4(1.0,0.0,0.0,1.0);\n"
+        "}\n";
+
+    unsigned int shader = CreateShader(vertexShader, fragmentShader);
+    glUseProgram(shader); //Binding to use the specified shader
 
     //keep window open untill closed
     while (!glfwWindowShouldClose(window))
@@ -85,6 +156,9 @@ int main(void)
         /*--Immediate mode--*/
         //DrawImmediate();
 
+        /*--Modern OpenGL--*/
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
         /*When an application draws in a single buffer the resulting image may display flickering issues.*/
         /*Double buffering : The front buffer contains the final output image that is shown at the screen, 
         while all the rendering commands draw to the back buffer.*/
@@ -94,6 +168,8 @@ int main(void)
         //function checks if any events are triggered (like keyboard input or mouse movement events)
         glfwPollEvents();
     }
+
+    glDeleteShader(shader);
 
     //Terminate GLFW
     glfwTerminate();
