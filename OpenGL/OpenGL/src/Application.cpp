@@ -153,11 +153,18 @@ int main(void)
 
     //vertex doesn't contain only position 
     //it also include various attributes such as position,texture co-ord,colors,normals,etc...
-    float vertices[6] =
+    float vertices[] =
     {
-        -0.5f,-0.5f,
-         0.0f, 0.5f,
-         0.5f,-0.5f
+        -0.5f,-0.5f,  //0
+         0.5f,-0.5f,  //1
+         0.5f, 0.5f,  //2
+        -0.5f, 0.5f   //3
+    };
+
+    unsigned int indices[] =
+    {
+        0, 1, 2,
+        2, 3, 0
     };
 
     /*Vertex Buffer Object*/
@@ -165,7 +172,7 @@ int main(void)
     glGenBuffers(1, &VBO); //bufferid contains the id of that buffer
     //opengl keeps using the binded id untill someother id is binded or this is unbinded
     glBindBuffer(GL_ARRAY_BUFFER, VBO); //selecting that id and setting to interpret as a array 
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), vertices,GL_STATIC_DRAW); //allocating and initializing data
+    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices,GL_STATIC_DRAW); //allocating and initializing data
 
     glEnableVertexAttribArray(0); //enabling vertex atribute by passing its index
     
@@ -177,6 +184,13 @@ int main(void)
     //stride - amount of bytes between each vertex 
     //pointer - offset of each attribute in bytes
     glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),(const void*)0); //posititon attribute
+
+    /*Element Buffer Object*/
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
 
     /*Parsing a shader from file*/
     ShaderProgramSource shadersource = ParseShader("resources/shaders/Basic.shader");
@@ -199,7 +213,12 @@ int main(void)
         //DrawImmediate();
 
         /*--Modern OpenGL--*/
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        //draw using vertices
+        //glDrawArrays(GL_TRIANGLES, 0, 3); 
+
+        //draw using indices 
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); //indices should always be unsigned type 
 
         /*When an application draws in a single buffer the resulting image may display flickering issues.*/
         /*Double buffering : The front buffer contains the final output image that is shown at the screen, 
