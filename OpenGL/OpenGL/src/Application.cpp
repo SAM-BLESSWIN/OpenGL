@@ -1,8 +1,61 @@
 #include<iostream>
+#include<fstream>
+#include<string>
+#include<sstream>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-void DrawImmediate();
+void DrawImmediate(); //Immediate Mode
+
+//Used for returning multiple object 
+struct ShaderProgramSource
+{
+    std::string VertexSource;
+    std::string FragmentSource;
+};
+
+
+static ShaderProgramSource ParseShader(const std::string& filePath)
+{
+    enum class ShaderType
+    {
+        NONE = -1,
+        VERTEX = 0,
+        FRAGMENT = 1
+    };
+
+    ShaderType type=ShaderType::NONE;
+
+    std::ifstream stream(filePath);
+    std::string line;
+    std::stringstream ss[2]; 
+
+    while (std::getline(stream,line))
+    {
+        if (line.find("#shader") != std::string::npos)
+        {
+            if (line.find("vertex") != std::string::npos)
+            {
+                //set mode to vertex
+                type = ShaderType::VERTEX;
+            }
+            else if (line.find("fragment") != std::string::npos)
+            {
+                //set mode to fragment
+                type = ShaderType::FRAGMENT;
+            }
+        }
+        else
+        {
+            if(type!=ShaderType::NONE)
+                ss[(int)type] << line << '\n';
+        }
+
+    }
+
+    return { ss[0].str(),ss[1].str() };
+}
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -75,7 +128,7 @@ int main(void)
     /*State setting function of GLFW has GLFW_ prefix*/
     
     //creating a window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "GPU Rendering", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Lucifer Canvas", NULL, NULL);
 
     //Error check
     if (window == NULL)
@@ -125,26 +178,15 @@ int main(void)
     //pointer - offset of each attribute in bytes
     glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),(const void*)0); //posititon attribute
 
-    /*Shader Code*/
-    std::string vertexShader =
-        "#version 330 core\n"     //use opengl version 330
-        "\n"
-        "layout(location = 0) in vec4 position;\n"  //location=0 is the index of the attribute
-        "void main()\n"
-        "{\n"
-        " gl_Position = position;\n"
-        "}\n";
+    /*Parsing a shader from file*/
+    ShaderProgramSource shadersource = ParseShader("resources/shaders/Basic.shader");
+    std::cout << "Vertex Shader" << std::endl;
+    std::cout << shadersource.VertexSource<<std::endl;
+    std::cout << "Fragment Shader" << std::endl;
+    std::cout << shadersource.FragmentSource<<std::endl;
 
-    std::string fragmentShader=
-        "#version 330 core\n"     //use opengl version 330
-        "\n"
-        "layout(location = 0) out vec4 color;\n"  //location=0 is the index of the attribute
-        "void main()\n"
-        "{\n"
-        " color=vec4(1.0,0.0,0.0,1.0);\n"
-        "}\n";
-
-    unsigned int shader = CreateShader(vertexShader, fragmentShader);
+    /*Creating and Compiling shader program*/
+    unsigned int shader = CreateShader(shadersource.VertexSource, shadersource.FragmentSource);
     glUseProgram(shader); //Binding to use the specified shader
 
     //keep window open untill closed
@@ -169,7 +211,7 @@ int main(void)
         glfwPollEvents();
     }
 
-    glDeleteShader(shader);
+    glDeleteProgram(shader);
 
     //Terminate GLFW
     glfwTerminate();
