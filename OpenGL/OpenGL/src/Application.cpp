@@ -168,9 +168,12 @@ int main(void)
 
     //setting all the context for current window
     glfwMakeContextCurrent(window);
+    
+    glfwSwapInterval(1); //vsync //want to sync your rendering loop to the refresh rate of the monitor 
 
     //Rendering area
     GLCALL(glViewport(0, 0, 800, 600));
+
 
     /* Initialize GLEW */  //GLEW must be initialized only after creating a valid opengl context
     if (glewInit() != GLEW_OK)
@@ -233,6 +236,13 @@ int main(void)
     unsigned int shader = CreateShader(shadersource.VertexSource, shadersource.FragmentSource);
     GLCALL(glUseProgram(shader)); //Binding to use the specified shader
 
+    GLCALL(int location = glGetUniformLocation(shader, "u_Color"));
+
+    float  r = 0.0f;
+    float increment = 0.05f;
+
+     
+
     //keep window open untill closed
     while (!glfwWindowShouldClose(window))
     {
@@ -253,6 +263,17 @@ int main(void)
         //draw using indices 
         glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); //indices should always be unsigned type 
         ASSERT(GLCallLog());  */
+
+
+        //animating color transition
+        GLCALL(glUniform4f(location, r, 0.0f, 0.5f, 1.0f)); //4f - 4 parameters and float 
+                                                            //uniforms are set per draw
+        if (r > 1.0f)
+            increment = -0.05f;
+        else if (r < 0)
+            increment = 0.05f;
+
+        r += increment;
 
         /*Automate way to error check each function*/
         GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
