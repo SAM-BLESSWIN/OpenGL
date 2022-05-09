@@ -6,35 +6,13 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-
-#define ASSERT(x) if(!(x)) __debugbreak();   //ASSERT Function
-
-/*NOTE : wrap all glfuntioncalls under GLCALL Macro*/
-#define GLCALL(x) GLClearErrors();\
-x;\
-ASSERT(GLCallLog(#x,__FILE__,__LINE__))  
-//#before turns any parameter in macro to string
-//__FILE__ return current file path
-//__LINE__ returns current line number
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 
 void DrawImmediate(); //Immediate Mode 
 
-//clearing all errors
-static void GLClearErrors()
-{
-    while (glGetError() != GL_NO_ERROR); //GL_NO_ERROR = 0
-}
-
-static bool GLCallLog(const char* functionname,const char* filename,int errorline)
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OPENGL ERROR] ("<<error <<") : " << functionname <<" "<<filename<<" : "<<errorline <<std::endl;
-        return false;
-    }
-    return true;
-}
 
 //Used for returning multiple object 
 struct ShaderProgramSource
@@ -185,120 +163,113 @@ int main(void)
     /*Current OpenGL version*/
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-    //vertex doesn't contain only position 
-    //it also include various attributes such as position,texture co-ord,colors,normals,etc...
-    float vertices[] =
-    {
-        -0.5f,-0.5f,  //0
-         0.5f,-0.5f,  //1
-         0.5f, 0.5f,  //2
-        -0.5f, 0.5f   //3
-    };
+   { //this scope is needed to delete stack allocated objects[VBO,IBO] to get deleted before glfw window terminates
+        //vertex doesn't contain only position 
+        //it also include various attributes such as position,texture co-ord,colors,normals,etc...
+        float vertices[] =
+        {
+            -0.5f,-0.5f,  //0
+             0.5f,-0.5f,  //1
+             0.5f, 0.5f,  //2
+            -0.5f, 0.5f   //3
+        };
 
-    unsigned int indices[] =
-    {
-        0, 1, 2,
-        2, 3, 0
-    };
+        unsigned int indices[] =
+        {
+            0, 1, 2,
+            2, 3, 0
+        };
 
-    /*Vertex Array Object*/
-    unsigned int VAO;
-    GLCALL(glGenVertexArrays(1,&VAO));
-    GLCALL(glBindVertexArray(VAO));
-
-
-    /*Vertex Buffer Object*/
-    unsigned int VBO;
-    GLCALL(glGenBuffers(1, &VBO)); //bufferid contains the id of that buffer
-    //opengl keeps using the binded id untill someother id is binded or this is unbinded
-    GLCALL(glBindBuffer(GL_ARRAY_BUFFER, VBO)); //selecting that id and setting to interpret as a array 
-    GLCALL(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), vertices,GL_STATIC_DRAW)); //allocating and initializing data
-
-    GLCALL(glEnableVertexAttribArray(0)); //enabling vertex atribute by passing its index
-    
-    /*Vertex Attributes*/
-    //index - index of the attribute
-    //size - count of data in each vertex
-    //type - datatype of the attribute
-    //normalize? - whether we want gpu to normalize data or not 
-    //stride - amount of bytes between each vertex 
-    //pointer - offset of each attribute in bytes
-    GLCALL(glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),(const void*)0)); //posititon attribute
-
-    /*Element Buffer Object*/
-    unsigned int EBO;
-    GLCALL(glGenBuffers(1, &EBO));
-    GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
-    GLCALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+        /*Vertex Array Object*/
+        unsigned int VAO;
+        GLCALL(glGenVertexArrays(1, &VAO));
+        GLCALL(glBindVertexArray(VAO));
 
 
-    /*Parsing a shader from file*/
-    ShaderProgramSource shadersource = ParseShader("resources/shaders/Basic.shader");
-
-    //std::cout << "Vertex Shader" << std::endl;
-    //std::cout << shadersource.VertexSource<<std::endl;
-    //std::cout << "Fragment Shader" << std::endl;
-    //std::cout << shadersource.FragmentSource<<std::endl; 
+        /*Vertex Buffer Object*/
+        VertexBuffer VBO(vertices, 4 * 2 * sizeof(float));
 
 
-    /*Creating and Compiling shader program*/
-    unsigned int shader = CreateShader(shadersource.VertexSource, shadersource.FragmentSource);
-    GLCALL(glUseProgram(shader)); //Binding to use the specified shader
+        GLCALL(glEnableVertexAttribArray(0)); //enabling vertex atribute by passing its index
 
-    GLCALL(int location = glGetUniformLocation(shader, "u_Color"));
+        /*Vertex Attributes*/
+        //index - index of the attribute
+        //size - count of data in each vertex
+        //type - datatype of the attribute
+        //normalize? - whether we want gpu to normalize data or not 
+        //stride - amount of bytes between each vertex 
+        //pointer - offset of each attribute in bytes
+        GLCALL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const void*)0)); //posititon attribute
 
-    float  r = 0.0f;
-    float increment = 0.05f;
+        /*Element Buffer Object*/
+        IndexBuffer IBO(indices, 6);
 
-     
+        /*Parsing a shader from file*/
+        ShaderProgramSource shadersource = ParseShader("resources/shaders/Basic.shader");
 
-    //keep window open untill closed
-    while (!glfwWindowShouldClose(window))
-    {
-        //clearing the screen
-        GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-         
-        /*--Immediate mode--*/
-        //DrawImmediate();
-
-        /*--Modern OpenGL--*/
-
-        //draw using vertices
-        //glDrawArrays(GL_TRIANGLES, 0, 3); 
+        //std::cout << "Vertex Shader" << std::endl;
+        //std::cout << shadersource.VertexSource<<std::endl;
+        //std::cout << "Fragment Shader" << std::endl;
+        //std::cout << shadersource.FragmentSource<<std::endl; 
 
 
-        /* Manual way to error check each function
-        GLClearErrors();
-        //draw using indices 
-        glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); //indices should always be unsigned type 
-        ASSERT(GLCallLog());  */
+        /*Creating and Compiling shader program*/
+        unsigned int shader = CreateShader(shadersource.VertexSource, shadersource.FragmentSource);
+        GLCALL(glUseProgram(shader)); //Binding to use the specified shader 
+
+        GLCALL(int location = glGetUniformLocation(shader, "u_Color"));
+
+        float  r = 0.0f;
+        float increment = 0.05f;
 
 
-        //animating color transition
-        GLCALL(glUniform4f(location, r, 0.0f, 0.5f, 1.0f)); //4f - 4 parameters and float 
-                                                            //uniforms are set per draw
-        if (r > 1.0f)
-            increment = -0.05f;
-        else if (r < 0)
-            increment = 0.05f;
 
-        r += increment;
+        //keep window open untill closed
+        while (!glfwWindowShouldClose(window))
+        {
+            //clearing the screen
+            GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-        /*Automate way to error check each function*/
-        GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+            /*--Immediate mode--*/
+            //DrawImmediate();
 
-        /*When an application draws in a single buffer the resulting image may display flickering issues.*/
-        /*Double buffering : The front buffer contains the final output image that is shown at the screen, 
-        while all the rendering commands draw to the back buffer.*/
-        // Swap front and back buffers 
-        glfwSwapBuffers(window);
+            /*--Modern OpenGL--*/
 
-        //function checks if any events are triggered (like keyboard input or mouse movement events)
-        glfwPollEvents();
-    }
+            //draw using vertices
+            //glDrawArrays(GL_TRIANGLES, 0, 3); 
 
-    GLCALL(glDeleteProgram(shader));
 
+            /* Manual way to error check each function
+            GLClearErrors();
+            //draw using indices
+            glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); //indices should always be unsigned type
+            ASSERT(GLCallLog());  */
+
+
+            //animating color transition
+            GLCALL(glUniform4f(location, r, 0.0f, 0.5f, 1.0f)); //4f - 4 parameters and float 
+                                                                //uniforms are set per draw
+            if (r > 1.0f)
+                increment = -0.05f;
+            else if (r < 0)
+                increment = 0.05f;
+
+            r += increment;
+
+            GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+            /*When an application draws in a single buffer the resulting image may display flickering issues.*/
+            /*Double buffering : The front buffer contains the final output image that is shown at the screen,
+            while all the rendering commands draw to the back buffer.*/
+            // Swap front and back buffers 
+            glfwSwapBuffers(window);
+
+            //function checks if any events are triggered (like keyboard input or mouse movement events)
+            glfwPollEvents();
+        }
+
+        GLCALL(glDeleteProgram(shader));
+   }
     //Terminate GLFW
     glfwTerminate();
     return 0;
