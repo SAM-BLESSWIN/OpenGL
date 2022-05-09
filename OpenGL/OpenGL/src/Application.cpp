@@ -154,7 +154,10 @@ int main(void)
         return -1;
 
     /*State setting function of GLFW has GLFW_ prefix*/
-    
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     //creating a window
     GLFWwindow* window = glfwCreateWindow(800, 600, "Lucifer Canvas", NULL, NULL);
 
@@ -198,12 +201,18 @@ int main(void)
         2, 3, 0
     };
 
+    /*Vertex Array Object*/
+    unsigned int VAO;
+    GLCALL(glGenVertexArrays(1,&VAO));
+    GLCALL(glBindVertexArray(VAO));
+
+
     /*Vertex Buffer Object*/
     unsigned int VBO;
     GLCALL(glGenBuffers(1, &VBO)); //bufferid contains the id of that buffer
     //opengl keeps using the binded id untill someother id is binded or this is unbinded
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, VBO)); //selecting that id and setting to interpret as a array 
-    GLCALL(glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices,GL_STATIC_DRAW)); //allocating and initializing data
+    GLCALL(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), vertices,GL_STATIC_DRAW)); //allocating and initializing data
 
     GLCALL(glEnableVertexAttribArray(0)); //enabling vertex atribute by passing its index
     
