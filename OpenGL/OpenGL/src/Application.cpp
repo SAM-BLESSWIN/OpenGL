@@ -9,6 +9,8 @@
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "VertexArray.h"
+#include "VertexBufferLayout.h"
 
 
 void DrawImmediate(); //Immediate Mode 
@@ -180,26 +182,16 @@ int main(void)
             2, 3, 0
         };
 
-        /*Vertex Array Object*/
-        unsigned int VAO;
-        GLCALL(glGenVertexArrays(1, &VAO));
-        GLCALL(glBindVertexArray(VAO));
-
-
         /*Vertex Buffer Object*/
         VertexBuffer VBO(vertices, 4 * 2 * sizeof(float));
 
+        /*Vertex Array Object*/
+        VertexArray VAO;
 
-        GLCALL(glEnableVertexAttribArray(0)); //enabling vertex atribute by passing its index
+        VertexBufferLayout layout;
+        layout.Push<float>(2);
 
-        /*Vertex Attributes*/
-        //index - index of the attribute
-        //size - count of data in each vertex
-        //type - datatype of the attribute
-        //normalize? - whether we want gpu to normalize data or not 
-        //stride - amount of bytes between each vertex 
-        //pointer - offset of each attribute in bytes
-        GLCALL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const void*)0)); //posititon attribute
+        VAO.AddBuffer(VBO, layout);
 
         /*Element Buffer Object*/
         IndexBuffer IBO(indices, 6);
