@@ -1,5 +1,8 @@
 #pragma once
 #include<GL/glew.h>
+#include "VertexArray.h"
+#include "IndexBuffer.h"
+#include "Shader.h"
 
 #define ASSERT(x) if(!(x)) __debugbreak();   //ASSERT Function
 
@@ -16,3 +19,10 @@ ASSERT(GLCallLog(#x,__FILE__,__LINE__))
 void GLClearErrors();
 
 bool GLCallLog(const char* functionname, const char* filename, int errorline);
+
+class Renderer
+{
+public:
+	void Clear();
+	void Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader);
+};

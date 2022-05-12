@@ -5,7 +5,7 @@
 
 IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count):m_count(count)
 {
-    ASSERT(sizeof(unsigned int) == sizeof(GLuint));
+    ASSERT(sizeof(unsigned int) == sizeof(GLuint)); //have check whether unsigned int is same as GLuint
 
     GLCALL(glGenBuffers(1, &m_RendererID));
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID));

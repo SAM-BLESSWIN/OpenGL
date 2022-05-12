@@ -15,3 +15,17 @@ bool GLCallLog(const char* functionname, const char* filename, int errorline)
     }
     return true;
 }
+
+void Renderer::Clear()
+{
+    //clearing the screen
+    GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+}
+
+void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader)
+{
+    VAO.Bind();
+    IBO.Bind();
+    shader.Bind();
+    GLCALL(glDrawElements(GL_TRIANGLES, IBO.GetCount(), GL_UNSIGNED_INT, nullptr));
+}

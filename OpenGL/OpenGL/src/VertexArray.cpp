@@ -1,4 +1,5 @@
 #include "VertexArray.h"
+#include "VertexBufferLayout.h"
 #include "Renderer.h"
 
 VertexArray::VertexArray()
@@ -11,12 +12,12 @@ VertexArray::~VertexArray()
     GLCALL(glDeleteVertexArrays(1,&m_RendererID));
 }
 
-void VertexArray::Bind()
+void VertexArray::Bind() const
 {
     GLCALL(glBindVertexArray(m_RendererID));
 }
 
-void VertexArray::UnBind()
+void VertexArray::Unbind() const
 {
     GLCALL(glBindVertexArray(0));
 }

@@ -18,7 +18,7 @@ struct VertexBufferElement
 			case GL_UNSIGNED_INT:	return 4;
 			case GL_UNSIGNED_BYTE:	return 1;
 		}
-		ASSERT(false);
+		ASSERT(false); //throws breakpoint when any other type is received
 		return 0;
 	}
 };
@@ -29,13 +29,14 @@ private:
 	std::vector<VertexBufferElement> m_Elements;
 	unsigned int m_stride;
 
+
 public:
 	VertexBufferLayout() :m_stride(0) {};
 
 	template<typename T>
 	void Push(unsigned int count)
 	{
-		static_assert(true);
+		//static_assert(false);
 	}
 
 	template<>

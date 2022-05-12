@@ -1,0 +1,3 @@
+﻿  Application.cpp
+D:\Passion\OpenGL\OpenGL\OpenGL\OpenGL\src\VertexBufferLayout.h(38,18): error C2607: static assertion failed
+D:\Passion\OpenGL\OpenGL\OpenGL\OpenGL\src\VertexBufferLayout.h(36,7): message : This diagnostic occurred in the compiler generated function 'void VertexBufferLayout::Push(unsigned int)'
