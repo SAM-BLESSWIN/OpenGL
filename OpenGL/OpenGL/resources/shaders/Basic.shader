@@ -3,19 +3,31 @@
 #version 330 core     //use opengl version 330
 
 layout(location = 0) in vec4 position;  //location=0 is the index of the attribute
+layout(location = 1) in vec2 texCoord;
+
+out vec2 v_TexCoord; //Pass data to fragment shader
+
 void main()
 {
  gl_Position = position;
+ v_TexCoord = texCoord;
 };
 
 /*Fragment Shader Code*/
 #shader fragment      //just for parsing // #shader not a syntax
 #version 330 core     //use opengl version 330
 
-uniform vec4 u_Color; //passing data from cpu using uniform
+in vec2 v_TexCoord; //Read data from vertex shader
+
+//passing data from cpu using uniform
+uniform vec4 u_Color; 
+uniform float u_size;
+uniform sampler2D u_Texture; //texture slot
 
 layout(location = 0) out vec4 color;  //location=0 is the index of the attribute
+
 void main()
 {
-	color = u_Color;
+	vec4 texColor = texture(u_Texture, v_TexCoord);
+	color = texColor;
 };

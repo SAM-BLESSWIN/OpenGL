@@ -12,6 +12,7 @@
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Texture.h"
 
 int main(void)
 {
@@ -25,7 +26,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //creating a window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Lucifer Canvas", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920/2, 1080/2, "Lucifer Canvas", NULL, NULL);
 
     //Error check
     if (window == NULL)
@@ -51,11 +52,11 @@ int main(void)
         //vertex doesn't contain only position 
         //it also include various attributes such as position,texture co-ord,colors,normals,etc...
         float vertices[] =
-        {
-            -0.5f,-0.5f,  //0
-             0.5f,-0.5f,  //1
-             0.5f, 0.5f,  //2
-            -0.5f, 0.5f   //3
+        {   //Position    //Texture
+            -0.5f,-0.5f,  0.0f,0.0f,   //0
+             0.5f,-0.5f,  1.0f,0.0f,   //1
+             0.5f, 0.5f,  1.0f,1.0f,   //2
+            -0.5f, 0.5f,  0.0f,1.0f    //3
         };
 
         unsigned int indices[] =
@@ -65,13 +66,14 @@ int main(void)
         };
 
         /*Vertex Buffer Object*/
-        VertexBuffer VBO(vertices, 4 * 2 * sizeof(float));
+        VertexBuffer VBO(vertices, 4 * 4 * sizeof(float));
 
         /*Vertex Array Object*/
         VertexArray VAO;
 
         VertexBufferLayout layout;
-        layout.Push<float>(2);  //attribute
+        layout.Push<float>(2);  //position attribute
+        layout.Push<float>(2);  //texture attribute
 
         VAO.AddBuffer(VBO, layout);
 
@@ -81,6 +83,15 @@ int main(void)
         /*Shader*/
         Shader shader("resources/shaders/Basic.shader");
 
+        /*Texture*/
+        Texture texture("resources/texture/godofwar.png");
+        texture.Bind(0);
+        shader.SetUniform1i("u_Texture", 0); //set uniform in shader to access texture in slot 0
+
+        /*Blending*/
+        GLCALL(glEnable(GL_BLEND));
+        GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
         VBO.Unbind();
         IBO.Unbind();
         VAO.Unbind();
@@ -89,7 +100,7 @@ int main(void)
         Renderer renderer;
 
         float  r = 0.0f;
-        float increment = 0.05f;
+        float increment = 0.005f;
 
         //keep window open untill closed
         while (!glfwWindowShouldClose(window))
@@ -98,25 +109,18 @@ int main(void)
 
             renderer.Clear();
 
-            //draw using vertices
-            //glDrawArrays(GL_TRIANGLES, 0, 3); 
-
-
-            /* Manual way to error check each function
-            GLClearErrors();
-            //draw using indices
-            glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); //indices should always be unsigned type
-            ASSERT(GLCallLog());  */
-
-
             //animating color transition
             shader.Bind();
             shader.SetUniform4f("u_Color", r, 0.0f, 0.5f, 1.0f);
 
+            //animating texture
+            shader.Bind();
+            shader.SetUniform1f("u_size", r);
+
             if (r > 1.0f)
-                increment = -0.05f;
+                increment = -0.005f;
             else if (r < 0)
-                increment = 0.05f;
+                increment = 0.005f;
 
             r += increment;
 

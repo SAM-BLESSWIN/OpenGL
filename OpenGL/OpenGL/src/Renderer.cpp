@@ -24,6 +24,15 @@ void Renderer::Clear()
 
 void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader)
 {
+    //draw using vertices
+    //glDrawArrays(GL_TRIANGLES, 0, 3); 
+
+    /* Manual way to error check each function
+    GLClearErrors();
+    //draw using indices
+    glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr); //indices should always be unsigned type
+    ASSERT(GLCallLog());  */
+
     VAO.Bind();
     IBO.Bind();
     shader.Bind();

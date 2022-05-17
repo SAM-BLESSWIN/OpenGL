@@ -47,7 +47,7 @@ void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& la
         //stride - amount of bytes between each vertex 
         //pointer - offset of each attribute in bytes
         GLCALL(glVertexAttribPointer(i, element.count, element.type, element.normalized, 
-            layout.GetStride(), (const void*)offset)); //posititon attribute
+            layout.GetStride(), (const void*)offset)); //attribute
 
         offset += element.count * VertexBufferElement::GetSizeofType(element.type);
     }
