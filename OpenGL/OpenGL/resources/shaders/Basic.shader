@@ -7,9 +7,17 @@ layout(location = 1) in vec2 texCoord;
 
 out vec2 v_TexCoord; //Pass data to fragment shader
 
+uniform mat4 u_Projection;
+uniform mat4 u_View;
+uniform mat4 u_Model;
+
 void main()
 {
- gl_Position = position;
+//Projection View Model Matrix
+//projection matrix * view matrix * model matrix * vector3
+
+ gl_Position = u_Projection * u_View * u_Model * position;
+
  v_TexCoord = texCoord;
 };
 

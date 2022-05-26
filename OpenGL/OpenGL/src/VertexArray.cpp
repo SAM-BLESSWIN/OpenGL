@@ -24,10 +24,10 @@ void VertexArray::Unbind() const
 
 
 
-void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout)
+void VertexArray::AddBuffer(const VertexBuffer& vbo, const VertexBufferLayout& layout)
 {
     Bind(); //Bind VAO
-	vb.Bind(); //Bind Buffer
+	vbo.Bind(); //Bind Buffer
 
     /*Setting Layout*/
     const auto& elements = layout.GetElements();

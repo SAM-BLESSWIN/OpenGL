@@ -14,6 +14,9 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 int main(void)
 {
     /* Initialize GLFW */
@@ -53,10 +56,10 @@ int main(void)
         //it also include various attributes such as position,texture co-ord,colors,normals,etc...
         float vertices[] =
         {   //Position    //Texture
-            -0.5f,-0.5f,  0.0f,0.0f,   //0
-             0.5f,-0.5f,  1.0f,0.0f,   //1
-             0.5f, 0.5f,  1.0f,1.0f,   //2
-            -0.5f, 0.5f,  0.0f,1.0f    //3
+             200.0f,100.0f,  0.0f,0.0f,   //0
+             800.0f,100.0f,  1.0f,0.0f,   //1
+             800.0f,400.0f,  1.0f,1.0f,   //2
+             200.0f,400.0f,  0.0f,1.0f    //3
         };
 
         unsigned int indices[] =
@@ -82,7 +85,7 @@ int main(void)
 
         /*Shader*/
         Shader shader("resources/shaders/Basic.shader");
-
+         
         /*Texture*/
         Texture texture("resources/texture/godofwar.png");
         texture.Bind(0);
@@ -96,6 +99,17 @@ int main(void)
         IBO.Unbind();
         VAO.Unbind();
         shader.Unbind();
+
+        /*Projection*/
+        glm::mat4 projection = glm::ortho(0.0f, (1920.0f / 2.0f), 0.0f, (1080.0f/2.0f),-1.0f,1.0f);
+        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f)); //simulating camera 
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,200.0f,0.0f));
+
+
+        shader.Bind();
+        shader.SetUniformMat4("u_Projection", projection);
+        shader.SetUniformMat4("u_View", view);
+        shader.SetUniformMat4("u_Model", model);
 
         Renderer renderer;
 
@@ -112,18 +126,13 @@ int main(void)
             //animating color transition
             shader.Bind();
             shader.SetUniform4f("u_Color", r, 0.0f, 0.5f, 1.0f);
-
-            //animating texture
-            shader.Bind();
-            shader.SetUniform1f("u_size", r);
-
             if (r > 1.0f)
                 increment = -0.005f;
             else if (r < 0)
                 increment = 0.005f;
-
             r += increment;
 
+            //Drawing 
             renderer.Draw(VAO,IBO,shader);
             
 
