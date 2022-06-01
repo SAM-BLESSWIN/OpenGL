@@ -5,6 +5,10 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
@@ -13,9 +17,6 @@
 #include "VertexArray.h"
 #include "Shader.h"
 #include "Texture.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 int main(void)
 {
@@ -55,11 +56,11 @@ int main(void)
         //vertex doesn't contain only position 
         //it also include various attributes such as position,texture co-ord,colors,normals,etc...
         float vertices[] =
-        {   //Position    //Texture
-             200.0f,100.0f,  0.0f,0.0f,   //0
-             800.0f,100.0f,  1.0f,0.0f,   //1
-             800.0f,400.0f,  1.0f,1.0f,   //2
-             200.0f,400.0f,  0.0f,1.0f    //3
+        {   //Position     //Texture
+            -1.0f, -1.0f,  0.0f, 0.0f,   //0
+             1.0f, -1.0f,  1.0f, 0.0f,   //1
+             1.0f,  1.0f,  1.0f, 1.0f,   //2
+            -1.0f,  1.0f,  0.0f, 1.0f    //3
         };
 
         unsigned int indices[] =
@@ -102,39 +103,77 @@ int main(void)
 
         /*Projection*/
         glm::mat4 projection = glm::ortho(0.0f, (1920.0f / 2.0f), 0.0f, (1080.0f/2.0f),-1.0f,1.0f);
-        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f)); //simulating camera 
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,200.0f,0.0f));
-
+        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)); //simulating camera 
+        glm::vec3 positionA(200, 200, 0);
+        glm::vec3 positionB(200, 200, 0);
+        glm::vec3 scale(100, 100, 1);
 
         shader.Bind();
         shader.SetUniformMat4("u_Projection", projection);
         shader.SetUniformMat4("u_View", view);
-        shader.SetUniformMat4("u_Model", model);
 
+
+        /*Renderer*/
         Renderer renderer;
 
-        float  r = 0.0f;
-        float increment = 0.005f;
+        /*Set up Imgui*/
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init((char*)glGetString(GL_NUM_SHADING_LANGUAGE_VERSIONS));
+
+        ImGui::StyleColorsDark();
+
 
         //keep window open untill closed
         while (!glfwWindowShouldClose(window))
         {
             /*--Modern OpenGL--*/
-
             renderer.Clear();
 
-            //animating color transition
-            shader.Bind();
-            shader.SetUniform4f("u_Color", r, 0.0f, 0.5f, 1.0f);
-            if (r > 1.0f)
-                increment = -0.005f;
-            else if (r < 0)
-                increment = 0.005f;
-            r += increment;
+            /*start imgui frame*/
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
             //Drawing 
-            renderer.Draw(VAO,IBO,shader);
+            shader.Bind();
+            glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scale);
+
+            //object 1
+            {
+                glm::mat4 translateMat = glm::translate(glm::mat4(1.0f), positionA);
+                glm::mat4 transformMat = translateMat * scaleMat;
+                shader.SetUniformMat4("u_Model", transformMat);
+                renderer.Draw(VAO, IBO, shader);
+            }
+
+            //object 2
+            {
+                glm::mat4 translateMat = glm::translate(glm::mat4(1.0f), positionB);
+                glm::mat4 transformMat = translateMat * scaleMat;
+                shader.SetUniformMat4("u_Model", transformMat);
+                renderer.Draw(VAO, IBO, shader);
+            }
+
+
+            /*imgui : Show a simple window that we create ourselves.*/
+            {
+                ImGui::Text("Transform");
+                ImGui::SliderFloat3("Position A", &positionA.x, 0.0f, 1000.0f);
+                ImGui::SliderFloat3("Position B", &positionB.x, 0.0f, 1000.0f);
+                ImGui::SliderFloat3("Scale", &scale.x, 0.0f, 1000.0f);
+
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            }
             
+
+            /*imgui render*/
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             /*When an application draws in a single buffer the resulting image may display flickering issues.*/
             /*Double buffering : The front buffer contains the final output image that is shown at the screen,
@@ -146,6 +185,11 @@ int main(void)
             glfwPollEvents();
         }
    }
+
+   /*imgui shutdown*/
+   ImGui_ImplOpenGL3_Shutdown();
+   ImGui::DestroyContext();
+
     //Terminate GLFW
     glfwTerminate();
     return 0;

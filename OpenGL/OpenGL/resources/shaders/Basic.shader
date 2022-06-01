@@ -2,8 +2,8 @@
 #shader vertex        //just for parsing //#shader not a syntax
 #version 330 core     //use opengl version 330
 
-layout(location = 0) in vec4 position;  //location=0 is the index of the attribute
-layout(location = 1) in vec2 texCoord;
+layout(location = 0) in vec4 position;  //location=0 is the index of the attribute //attribute = 0 : position
+layout(location = 1) in vec2 texCoord;  //attribute = 1 : texture
 
 out vec2 v_TexCoord; //Pass data to fragment shader
 
