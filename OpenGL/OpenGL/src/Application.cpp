@@ -18,6 +18,8 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include "Test/TestClearColor.h"
+
 int main(void)
 {
     /* Initialize GLFW */
@@ -52,66 +54,10 @@ int main(void)
     /*Current OpenGL version*/
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-   { //this scope is needed to delete stack allocated objects[VBO,IBO] to get deleted before glfw window terminates
-        //vertex doesn't contain only position 
-        //it also include various attributes such as position,texture co-ord,colors,normals,etc...
-        float vertices[] =
-        {   //Position     //Texture
-            -1.0f, -1.0f,  0.0f, 0.0f,   //0
-             1.0f, -1.0f,  1.0f, 0.0f,   //1
-             1.0f,  1.0f,  1.0f, 1.0f,   //2
-            -1.0f,  1.0f,  0.0f, 1.0f    //3
-        };
-
-        unsigned int indices[] =
-        {
-            0, 1, 2,
-            2, 3, 0
-        };
-
-        /*Vertex Buffer Object*/
-        VertexBuffer VBO(vertices, 4 * 4 * sizeof(float));
-
-        /*Vertex Array Object*/
-        VertexArray VAO;
-
-        VertexBufferLayout layout;
-        layout.Push<float>(2);  //position attribute
-        layout.Push<float>(2);  //texture attribute
-
-        VAO.AddBuffer(VBO, layout);
-
-        /*Element Buffer Object*/
-        IndexBuffer IBO(indices, 6);
-
-        /*Shader*/
-        Shader shader("resources/shaders/Basic.shader");
-         
-        /*Texture*/
-        Texture texture("resources/texture/godofwar.png");
-        texture.Bind(0);
-        shader.SetUniform1i("u_Texture", 0); //set uniform in shader to access texture in slot 0
-
+   { 
         /*Blending*/
         GLCALL(glEnable(GL_BLEND));
         GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
-        VBO.Unbind();
-        IBO.Unbind();
-        VAO.Unbind();
-        shader.Unbind();
-
-        /*Projection*/
-        glm::mat4 projection = glm::ortho(0.0f, (1920.0f / 2.0f), 0.0f, (1080.0f/2.0f),-1.0f,1.0f);
-        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)); //simulating camera 
-        glm::vec3 positionA(200, 200, 0);
-        glm::vec3 positionB(200, 200, 0);
-        glm::vec3 scale(100, 100, 1);
-
-        shader.Bind();
-        shader.SetUniformMat4("u_Projection", projection);
-        shader.SetUniformMat4("u_View", view);
-
 
         /*Renderer*/
         Renderer renderer;
@@ -128,48 +74,25 @@ int main(void)
         ImGui::StyleColorsDark();
 
 
+        /*Test Framework*/
+        test::TestClearColor test;
+
         //keep window open untill closed
         while (!glfwWindowShouldClose(window))
         {
             /*--Modern OpenGL--*/
             renderer.Clear();
 
+            test.OnUpdate(0.0f);
+            test.OnRender();
+
             /*start imgui frame*/
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            //Drawing 
-            shader.Bind();
-            glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scale);
 
-            //object 1
-            {
-                glm::mat4 translateMat = glm::translate(glm::mat4(1.0f), positionA);
-                glm::mat4 transformMat = translateMat * scaleMat;
-                shader.SetUniformMat4("u_Model", transformMat);
-                renderer.Draw(VAO, IBO, shader);
-            }
-
-            //object 2
-            {
-                glm::mat4 translateMat = glm::translate(glm::mat4(1.0f), positionB);
-                glm::mat4 transformMat = translateMat * scaleMat;
-                shader.SetUniformMat4("u_Model", transformMat);
-                renderer.Draw(VAO, IBO, shader);
-            }
-
-
-            /*imgui : Show a simple window that we create ourselves.*/
-            {
-                ImGui::Text("Transform");
-                ImGui::SliderFloat3("Position A", &positionA.x, 0.0f, 1000.0f);
-                ImGui::SliderFloat3("Position B", &positionB.x, 0.0f, 1000.0f);
-                ImGui::SliderFloat3("Scale", &scale.x, 0.0f, 1000.0f);
-
-                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            }
-            
+            test.OnImGuiRender();
 
             /*imgui render*/
             ImGui::Render();
